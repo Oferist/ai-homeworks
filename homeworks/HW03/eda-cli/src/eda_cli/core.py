@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from pandas.api import types as ptypes
@@ -45,13 +45,7 @@ def summarize_dataset(
     example_values_per_column: int = 3,
 ) -> DatasetSummary:
     """
-    Полный обзор датасета по колонкам:
-    - количество строк/столбцов;
-    - типы;
-    - пропуски;
-    - количество уникальных;
-    - несколько примерных значений;
-    - базовые числовые статистики (для numeric).
+    Полный обзор датасета по колонкам.
     """
     n_rows, n_cols = df.shape
     columns: List[ColumnSummary] = []
@@ -65,7 +59,6 @@ def summarize_dataset(
         missing_share = float(missing / n_rows) if n_rows > 0 else 0.0
         unique = int(s.nunique(dropna=True))
 
-        # Примерные значения выводим как строки
         examples = (
             s.dropna().astype(str).unique()[:example_values_per_column].tolist()
             if non_null > 0
@@ -105,9 +98,6 @@ def summarize_dataset(
 
 
 def missing_table(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Таблица пропусков по колонкам: count/share.
-    """
     if df.empty:
         return pd.DataFrame(columns=["missing_count", "missing_share"])
 
@@ -126,9 +116,6 @@ def missing_table(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def correlation_matrix(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Корреляция Пирсона для числовых колонок.
-    """
     numeric_df = df.select_dtypes(include="number")
     if numeric_df.empty:
         return pd.DataFrame()
@@ -140,10 +127,6 @@ def top_categories(
     max_columns: int = 5,
     top_k: int = 5,
 ) -> Dict[str, pd.DataFrame]:
-    """
-    Для категориальных/строковых колонок считает top-k значений.
-    Возвращает словарь: колонка -> DataFrame со столбцами value/count/share.
-    """
     result: Dict[str, pd.DataFrame] = {}
     candidate_cols: List[str] = []
 
@@ -170,14 +153,14 @@ def top_categories(
     return result
 
 
-def compute_quality_flags(summary: DatasetSummary, missing_df: pd.DataFrame) -> Dict[str, Any]:
+def compute_quality_flags(summary: DatasetSummary, missing_df: pd.DataFrame, df: Optional[pd.DataFrame] = None) -> Dict[str, Any]:
     """
-    Простейшие эвристики «качества» данных:
-    - слишком много пропусков;
-    - подозрительно мало строк;
-    и т.п.
+    Эвристики качества данных.
+    Добавлены новые проверки для HW03.
     """
     flags: Dict[str, Any] = {}
+    
+    # --- Старые проверки ---
     flags["too_few_rows"] = summary.n_rows < 100
     flags["too_many_columns"] = summary.n_cols > 100
 
@@ -185,13 +168,49 @@ def compute_quality_flags(summary: DatasetSummary, missing_df: pd.DataFrame) -> 
     flags["max_missing_share"] = max_missing_share
     flags["too_many_missing"] = max_missing_share > 0.5
 
-    # Простейший «скор» качества
+    # --- Новые проверки (HW03) ---
+    
+    # 1. Has constant columns (колонка с 1 уникальным значением)
+    constant_cols = [c.name for c in summary.columns if c.unique <= 1]
+    flags["has_constant_columns"] = len(constant_cols) > 0
+    flags["constant_columns_list"] = constant_cols
+
+    # Для следующих проверок нужен сам DataFrame
+    flags["has_many_zero_values"] = False
+    flags["cols_with_many_zeros"] = []
+    flags["has_suspicious_id_duplicates"] = False
+
+    if df is not None:
+        # 2. Has many zero values (> 30% нулей в числовых колонках)
+        numeric_cols = df.select_dtypes(include="number").columns
+        zero_threshold = 0.3
+        cols_with_many_zeros = []
+        for col in numeric_cols:
+            if len(df) > 0 and (df[col] == 0).mean() > zero_threshold:
+                cols_with_many_zeros.append(col)
+        
+        if cols_with_many_zeros:
+            flags["has_many_zero_values"] = True
+            flags["cols_with_many_zeros"] = cols_with_many_zeros
+
+        # 3. Suspicious ID duplicates
+        # Ищем колонку, похожую на ID (id, user_id, student_id и т.д.)
+        id_candidates = [c for c in df.columns if 'id' in c.lower()]
+        for col in id_candidates:
+            # Если колонка есть, проверим уникальность
+            if not df[col].is_unique:
+                flags["has_suspicious_id_duplicates"] = True
+                break
+
+    # --- Итоговый скор ---
     score = 1.0
-    score -= max_missing_share  # чем больше пропусков, тем хуже
+    score -= max_missing_share
     if summary.n_rows < 100:
-        score -= 0.2
-    if summary.n_cols > 100:
         score -= 0.1
+    if flags["has_constant_columns"]:
+        score -= 0.1
+    if flags["has_suspicious_id_duplicates"]:
+        score -= 0.2  # Дубликаты в ID это плохо
 
     score = max(0.0, min(1.0, score))
     flags["quality_score"] = score
@@ -200,9 +219,6 @@ def compute_quality_flags(summary: DatasetSummary, missing_df: pd.DataFrame) -> 
 
 
 def flatten_summary_for_print(summary: DatasetSummary) -> pd.DataFrame:
-    """
-    Превращает DatasetSummary в табличку для более удобного вывода.
-    """
     rows: List[Dict[str, Any]] = []
     for col in summary.columns:
         rows.append(

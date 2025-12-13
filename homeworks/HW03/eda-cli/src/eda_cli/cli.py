@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 import typer
@@ -22,7 +21,7 @@ from .viz import (
     save_top_categories_tables,
 )
 
-app = typer.Typer(help="Мини-CLI для EDA CSV-файлов")
+app = typer.Typer(help="Мини-CLI для EDA CSV-файлов (HW03 Edition)")
 
 
 def _load_csv(
@@ -45,10 +44,7 @@ def overview(
     encoding: str = typer.Option("utf-8", help="Кодировка файла."),
 ) -> None:
     """
-    Напечатать краткий обзор датасета:
-    - размеры;
-    - типы;
-    - простая табличка по колонкам.
+    Напечатать краткий обзор датасета.
     """
     df = _load_csv(Path(path), sep=sep, encoding=encoding)
     summary: DatasetSummary = summarize_dataset(df)
@@ -67,14 +63,12 @@ def report(
     sep: str = typer.Option(",", help="Разделитель в CSV."),
     encoding: str = typer.Option("utf-8", help="Кодировка файла."),
     max_hist_columns: int = typer.Option(6, help="Максимум числовых колонок для гистограмм."),
+    # ### HW03 CHANGE: New CLI parameters ###
+    title: str = typer.Option("EDA-отчёт", help="Заголовок отчёта."),
+    top_k_categories: int = typer.Option(5, help="Сколько топ-значений категорий выводить.")
 ) -> None:
     """
-    Сгенерировать полный EDA-отчёт:
-    - текстовый overview и summary по колонкам (CSV/Markdown);
-    - статистика пропусков;
-    - корреляционная матрица;
-    - top-k категорий по категориальным признакам;
-    - картинки: гистограммы, матрица пропусков, heatmap корреляции.
+    Сгенерировать полный EDA-отчёт.
     """
     out_root = Path(out_dir)
     out_root.mkdir(parents=True, exist_ok=True)
@@ -86,10 +80,13 @@ def report(
     summary_df = flatten_summary_for_print(summary)
     missing_df = missing_table(df)
     corr_df = correlation_matrix(df)
-    top_cats = top_categories(df)
+    
+    # ### HW03 CHANGE: Use new parameter top_k_categories ###
+    top_cats = top_categories(df, top_k=top_k_categories)
 
     # 2. Качество в целом
-    quality_flags = compute_quality_flags(summary, missing_df)
+    # ### HW03 CHANGE: Pass df to compute flags ###
+    quality_flags = compute_quality_flags(summary, missing_df, df=df)
 
     # 3. Сохраняем табличные артефакты
     summary_df.to_csv(out_root / "summary.csv", index=False)
@@ -102,15 +99,21 @@ def report(
     # 4. Markdown-отчёт
     md_path = out_root / "report.md"
     with md_path.open("w", encoding="utf-8") as f:
-        f.write(f"# EDA-отчёт\n\n")
+        # ### HW03 CHANGE: Use title parameter ###
+        f.write(f"# {title}\n\n")
         f.write(f"Исходный файл: `{Path(path).name}`\n\n")
         f.write(f"Строк: **{summary.n_rows}**, столбцов: **{summary.n_cols}**\n\n")
 
         f.write("## Качество данных (эвристики)\n\n")
         f.write(f"- Оценка качества: **{quality_flags['quality_score']:.2f}**\n")
         f.write(f"- Макс. доля пропусков по колонке: **{quality_flags['max_missing_share']:.2%}**\n")
+        
+        # ### HW03 CHANGE: Add info about new heuristics in report ###
+        f.write(f"- Константные колонки: **{quality_flags['has_constant_columns']}** {quality_flags.get('constant_columns_list', [])}\n")
+        f.write(f"- Много нулей (>30%): **{quality_flags['has_many_zero_values']}** {quality_flags.get('cols_with_many_zeros', [])}\n")
+        f.write(f"- Подозрение на дубли ID: **{quality_flags['has_suspicious_id_duplicates']}**\n")
+        
         f.write(f"- Слишком мало строк: **{quality_flags['too_few_rows']}**\n")
-        f.write(f"- Слишком много колонок: **{quality_flags['too_many_columns']}**\n")
         f.write(f"- Слишком много пропусков: **{quality_flags['too_many_missing']}**\n\n")
 
         f.write("## Колонки\n\n")
@@ -132,7 +135,7 @@ def report(
         if not top_cats:
             f.write("Категориальные/строковые признаки не найдены.\n\n")
         else:
-            f.write("См. файлы в папке `top_categories/`.\n\n")
+            f.write(f"Топ-{top_k_categories} значений. См. файлы в папке `top_categories/`.\n\n")
 
         f.write("## Гистограммы числовых колонок\n\n")
         f.write("См. файлы `hist_*.png`.\n")
@@ -144,9 +147,6 @@ def report(
 
     typer.echo(f"Отчёт сгенерирован в каталоге: {out_root}")
     typer.echo(f"- Основной markdown: {md_path}")
-    typer.echo("- Табличные файлы: summary.csv, missing.csv, correlation.csv, top_categories/*.csv")
-    typer.echo("- Графики: hist_*.png, missing_matrix.png, correlation_heatmap.png")
-
 
 if __name__ == "__main__":
     app()
