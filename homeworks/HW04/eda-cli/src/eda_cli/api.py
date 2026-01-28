@@ -48,14 +48,25 @@ class QualityResponse(BaseModel):
 # --- Helper Functions ---
 
 def _read_csv_upload(file: UploadFile) -> pd.DataFrame:
-    """Читает загруженный файл в DataFrame."""
+    """
+    Читает загруженный файл в DataFrame.
+    Обрабатывает ошибки чтения и пустые файлы (HTTP 400).
+    """
     try:
         # Считываем CSV
+        # file.file - это spooled temporary file
         df = pd.read_csv(file.file)
-        return df
     except Exception as e:
+        # Ошибка парсинга (битый файл, не csv и т.д.)
         logger.error(f"Error reading CSV: {e}")
-        raise HTTPException(status_code=400, detail=f"Invalid CSV file: {e}")
+        raise HTTPException(status_code=400, detail=f"Invalid CSV file format: {e}")
+    
+    # Проверка на пустой датасет
+    if df.empty:
+        logger.warning("Uploaded CSV is empty")
+        raise HTTPException(status_code=400, detail="The uploaded CSV file is empty.")
+
+    return df
 
 
 # --- Endpoints ---
@@ -103,6 +114,7 @@ def quality_from_csv(file: UploadFile = File(...)):
     request_id = uuid.uuid4()
     start_ts = time.time()
     
+    # Используем безопасное чтение с обработкой ошибок
     df = _read_csv_upload(file)
     
     # Используем функции ядра
@@ -138,6 +150,8 @@ def quality_flags_from_csv(file: UploadFile = File(...)):
     - has_suspicious_id_duplicates
     """
     start_ts = time.time()
+    
+    # Безопасное чтение
     df = _read_csv_upload(file)
 
     # 1. Анализ датасета
