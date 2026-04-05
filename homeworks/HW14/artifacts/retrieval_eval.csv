@@ -1,0 +1,11 @@
+query,expected_source,retrieved_sources,hit_at_k,recall_at_k
+data manipulation tool,Pandas,"Pandas, Pandas, Seaborn",1,1
+multi-dimensional array,NumPy,"NumPy, NumPy, CatBoost",1,1
+interactive visualization,Matplotlib,"Plotly, Plotly, Matplotlib",1,1
+machine learning algorithms,Scikit-Learn,"Scikit-Learn, TensorFlow, Scikit-Learn",1,1
+statistical graphics,Seaborn,"Seaborn, Seaborn, Matplotlib",1,1
+deep learning framework,PyTorch,"PyTorch, TensorFlow, TensorFlow",1,1
+ML neural networks,TensorFlow,"TensorFlow, XGBoost, Scikit-Learn",1,1
+optimization and integration,SciPy,"SciPy, SciPy, XGBoost",1,1
+estimate statistical models,Statsmodels,"Statsmodels, Statsmodels, Scikit-Learn",1,1
+web-based dashboards,Plotly,"Plotly, Plotly, Pandas",1,1
