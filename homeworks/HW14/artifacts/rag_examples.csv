@@ -2,6 +2,6 @@ question,answer,retrieved_sources
 How to visualize data?,"Based on retrieved documents, here is the information: Source: Plotly. web-based visualizations and dashboards.
 Source: Plotly. Plotly is used for creating interactive web-based visualizat",Plotly
 Explain machine learning with Python,"Based on retrieved documents, here is the information: Source: PyTorch. PyTorch is an open-source machine learning framework for dee
-Source: Scikit-Learn. Scikit-learn features various machine learning algorithms fo","PyTorch, Scikit-Learn"
+Source: Scikit-Learn. Scikit-learn features various machine learning algorithms fo","Scikit-Learn, PyTorch"
 What is Pandas used for?,"Based on retrieved documents, here is the information: Source: Pandas. Pandas is for data manipulation and analysis. It uses DataFr
 Source: Pandas. ysis. It uses DataFrames to handle tabular data efficiently.",Pandas

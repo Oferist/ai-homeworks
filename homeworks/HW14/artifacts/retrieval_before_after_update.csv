@@ -1,2 +1,4 @@
 query,before_retrieved_sources,after_retrieved_sources,changed
-Web framework for APIs,Plotly,FastAPI,True
+Modern web framework for APIs,Plotly,FastAPI,True
+Unsupervised topic modeling library,Scikit-Learn,Gensim,True
+High performance Python APIs,Dask,Dask,False
