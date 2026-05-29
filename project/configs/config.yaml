@@ -1,0 +1,61 @@
+project:
+  name: bike-demand-forecast
+  random_state: 42
+
+data:
+  dataset_url: "https://archive.ics.uci.edu/ml/machine-learning-databases/00275/Bike-Sharing-Dataset.zip"
+  raw_dir: "data/raw"
+  hour_csv: "data/raw/hour.csv"
+  day_csv: "data/raw/day.csv"
+  sample_csv: "data/sample_hour.csv"
+  sample_size: 500
+
+split:
+  train_size: 0.70
+  validation_size: 0.15
+  test_size: 0.15
+
+features:
+  categorical:
+    - season
+    - mnth
+    - hr
+    - holiday
+    - weekday
+    - workingday
+    - weathersit
+  numeric:
+    - yr
+    - temp
+    - atemp
+    - hum
+    - windspeed
+  target: cnt
+
+models:
+  ridge:
+    alpha: 1.0
+  random_forest:
+    n_estimators: 180
+    max_depth: 18
+    min_samples_leaf: 2
+    n_jobs: -1
+
+artifacts:
+  dir: "artifacts"
+  model_path: "artifacts/model.joblib"
+  metadata_path: "artifacts/model_metadata.json"
+  metrics_json: "artifacts/metrics.json"
+  metrics_csv: "artifacts/metrics.csv"
+  predictions_csv: "artifacts/test_predictions.csv"
+  feature_importance_csv: "artifacts/feature_importance.csv"
+  error_by_hour_csv: "artifacts/error_by_hour.csv"
+  hourly_demand_plot: "artifacts/hourly_demand.png"
+  prediction_plot: "artifacts/prediction_vs_actual.png"
+  feature_importance_plot: "artifacts/feature_importance.png"
+  error_by_hour_plot: "artifacts/error_by_hour.png"
+
+service:
+  host: "0.0.0.0"
+  port: 8000
+  log_level: "info"

@@ -1,0 +1,5 @@
+model,split,mae,rmse,r2
+dummy_mean,validation,138.7511,174.2015,-0.001
+ridge,validation,74.0396,99.5083,0.6734
+random_forest,validation,40.8114,61.612,0.8748
+random_forest,test,39.4357,59.506,0.8882

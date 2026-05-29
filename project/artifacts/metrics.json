@@ -1,0 +1,87 @@
+{
+  "results": [
+    {
+      "model": "dummy_mean",
+      "split": "validation",
+      "mae": 138.7511,
+      "rmse": 174.2015,
+      "r2": -0.001
+    },
+    {
+      "model": "ridge",
+      "split": "validation",
+      "mae": 74.0396,
+      "rmse": 99.5083,
+      "r2": 0.6734
+    },
+    {
+      "model": "random_forest",
+      "split": "validation",
+      "mae": 40.8114,
+      "rmse": 61.612,
+      "r2": 0.8748
+    },
+    {
+      "model": "random_forest",
+      "split": "test",
+      "mae": 39.4357,
+      "rmse": 59.506,
+      "r2": 0.8882
+    }
+  ],
+  "metadata": {
+    "project": "bike-demand-forecast",
+    "trained_at": "2026-05-29T11:09:16.111887+00:00",
+    "dataset": "UCI Bike Sharing Dataset, hourly data",
+    "target": "cnt",
+    "features": {
+      "categorical": [
+        "season",
+        "mnth",
+        "hr",
+        "holiday",
+        "weekday",
+        "workingday",
+        "weathersit"
+      ],
+      "numeric": [
+        "yr",
+        "temp",
+        "atemp",
+        "hum",
+        "windspeed"
+      ],
+      "target": "cnt"
+    },
+    "final_model": "random_forest",
+    "validation_results": [
+      {
+        "model": "dummy_mean",
+        "split": "validation",
+        "mae": 138.7511,
+        "rmse": 174.2015,
+        "r2": -0.001
+      },
+      {
+        "model": "ridge",
+        "split": "validation",
+        "mae": 74.0396,
+        "rmse": 99.5083,
+        "r2": 0.6734
+      },
+      {
+        "model": "random_forest",
+        "split": "validation",
+        "mae": 40.8114,
+        "rmse": 61.612,
+        "r2": 0.8748
+      }
+    ],
+    "test_metrics": {
+      "mae": 39.4357,
+      "rmse": 59.506,
+      "r2": 0.8882
+    },
+    "model_path": "artifacts/model.joblib"
+  }
+}
