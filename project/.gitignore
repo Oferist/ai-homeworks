@@ -1,0 +1,17 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+htmlcov/
+.coverage
+dist/
+build/
+*.egg-info/
+logs/
+data/raw/Bike-Sharing-Dataset.zip
